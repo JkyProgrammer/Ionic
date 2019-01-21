@@ -1,11 +1,14 @@
 package main;
 
+import java.awt.Desktop;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import wikipedia.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class Ionic {
 
@@ -35,7 +38,9 @@ public class Ionic {
 			while ((nextIndex = content.indexOf("<li>", nextIndex + 4)) < endIndex) {
 				nextIndex = content.indexOf("=", nextIndex);
 				nextIndex += 2;
-				linksToSee.add("https://en.wikipedia.org" + content.substring(nextIndex, content.indexOf("\"", nextIndex)));
+				
+				String newLink = content.substring(nextIndex, content.indexOf("\"", nextIndex));
+				if (!newLink.equals("mw-selflink selflink")) linksToSee.add("https://en.wikipedia.org" + newLink);
 			}
 		}
 		content = content.substring(endIndex + 8);
@@ -49,6 +54,15 @@ public class Ionic {
 		
 		System.out.println(content);
 		for (String s : linksToSee) {
+//			if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+//			    try {
+//					Desktop.getDesktop().browse(new URI(s));
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				} catch (URISyntaxException e) {
+//					e.printStackTrace();
+//				}
+//			}
 			System.out.println(s);
 		}
 	}
