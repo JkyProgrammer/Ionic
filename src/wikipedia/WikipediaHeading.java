@@ -1,5 +1,7 @@
 package wikipedia;
 
+import java.util.ArrayList;
+
 public class WikipediaHeading {
 	private String title;
 	private ArrayList<WikipediaDataItem> data;

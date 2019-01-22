@@ -1,20 +1,34 @@
 package wikipedia;
 
-public class WikipediaDataItem {
-	private String string;
-	private ArrayList<String> bullets;
+import java.awt.Image;
+import java.util.ArrayList;
+import java.util.Arrays;
 
-	private WikipediaDataItemType type;
+public class WikipediaDataItem {
+	String text;
+	Image image;
+	ArrayList<String> bullets;
+
+	WikipediaDataItemType type;
 
 	public WikipediaDataItem (String[] b) {
 		type = WikipediaDataItemType.bullets;
-		string = null;
+		text = null;
+		image = null;
 		bullets = new ArrayList<String> (Arrays.asList (b));
 	}
 
 	public WikipediaDataItem (String s) {
-		type = WikipediaDataItemType.string;
-		string = s;
+		type = WikipediaDataItemType.text;
+		text = s;
+		image = null;
+		bullets = null;
+	}
+	
+	public WikipediaDataItem (Image i) {
+		type = WikipediaDataItemType.image;
+		text = null;
+		image = i;
 		bullets = null;
 	}
 }

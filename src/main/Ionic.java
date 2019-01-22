@@ -18,6 +18,7 @@ public class Ionic {
 	}
 	
 	WikipediaGetter wg = new WikipediaGetter ();
+	ArrayList<WikipediaArticle> articles = new ArrayList<WikipediaArticle> ();
 	
 	public void examineURL (String startURL) {
 		String content = wg.getContent(startURL);
