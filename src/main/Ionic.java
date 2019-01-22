@@ -66,6 +66,36 @@ public class Ionic {
 //			}
 			System.out.println(s);
 		}
+		
+		// Analyse the text content
+		int endOfContent = content.length()-1;
+		int searchIndex = 0;
+		
+		WikipediaArticle currentArticle = new WikipediaArticle ();
+		currentArticle.title = startURL.substring(startURL.lastIndexOf("/")+1);
+		currentArticle.link = startURL;
+		WikipediaHeading currentHeading = new WikipediaHeading ("Summary");
+		
+		while (searchIndex <= endOfContent && searchIndex != -1) { // TODO: Jump to next TAG, single nested loop
+			while ((searchIndex = content.indexOf("<p>", searchIndex)) != -1 && searchIndex <= endOfContent) {
+				String tmpStr = "";
+				// TODO: Extract rendered text and links
+			}
+			currentArticle.headings.add(currentHeading);
+			currentHeading = new WikipediaHeading ("<Next heading>"); // TODO: Find heading name
+		}
+		
+		usingBufferedWriter (content, "page.html");
+	}
+	
+	public static void usingBufferedWriter(String s, String path) {
+		try {
+		BufferedWriter writer = new BufferedWriter(new FileWriter(path));
+	    writer.write(s);
+	    writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 }
