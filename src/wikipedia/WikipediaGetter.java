@@ -29,9 +29,9 @@ public class WikipediaGetter {
 	        br.close();
 	        return output;
 	    } catch (MalformedURLException e) {
-	        e.printStackTrace();
+	        //e.printStackTrace();
 	    } catch (IOException e) {
-	        e.printStackTrace();
+	        //e.printStackTrace();
 	    }
 	    return null;
 	}

@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import wikipedia.*;
 import java.net.URI;
@@ -17,14 +18,15 @@ public class Ionic {
 
 	public static void main(String[] args) {
 		Ionic i = new Ionic ();
-		//i.examineURL ("https://en.wikipedia.org/wiki/Logic_bomb");
+		i.examineURL ("https://en.wikipedia.org/wiki/Logic_bomb", 0);
 		//i.examineURL("https://en.wikipedia.org/wiki/Gordon_Cowans");
-      i.examineURL ("https://en.m.wikipedia.org/wiki/Ion", 0);
+		//i.findHitler("https://en.m.wikipedia.org/wiki/Ion");
 	}
 	
 	public Ionic () {
 		try {
-		pw = new PrintWriter (new File("Links.txt"));
+			pw = new PrintWriter (new File("Links.txt"));
+			for (File file: (new File("ViewedPages/")).listFiles()) file.delete();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -35,26 +37,51 @@ public class Ionic {
 	WikipediaGetter wg = new WikipediaGetter ();
 	ArrayList<WikipediaArticle> articles = new ArrayList<WikipediaArticle> ();
 	
-	static int iterationDepth = 2;
-	ArrayList<String> linksToSee = new ArrayList<String> ();
+	int iterationDepth = 2;
+	boolean isFindingHitler = false;
 	ArrayList<String> allLinks = new ArrayList<String> ();
 	
-	public void addLinkToSee (String link) {
-		if (!allLinks.contains(link)) {
-			allLinks.add(link);
-			linksToSee.add(link);
+	ArrayList<String> hitlerLinks = new ArrayList<String> (Arrays.asList("Adolf_Hitler", "World_War_II", "Germany", "German"));
+	
+	public void addLinkToSee (String link, ArrayList<String> arr, int depth) {
+		String realLink = "https://en.wikipedia.org" + link;
+		if (isFindingHitler) {
+			if (hitlerLinks.contains(link)) {
+				allLinks.add(realLink);
+				if (depth < iterationDepth) examineURL (realLink, depth+1);
+				//linksToSee.add(realLink);
+			} else if (depth < 2) { // Allows a one article depth expansion, to reduce dead-ends
+				allLinks.add(realLink);
+				if (depth < iterationDepth) examineURL (realLink, depth+1);
+				//linksToSee.add(realLink);
+			}
+		} else if (!allLinks.contains(realLink)) {
+			allLinks.add(realLink);
+			arr.add(realLink);
 		}
 	}
 	
+	public void findHitler (String startingPoint) {
+		int tmp = iterationDepth;
+		iterationDepth = 10;
+		isFindingHitler = true;
+		examineURL (startingPoint, 0);
+		isFindingHitler = false;
+		iterationDepth = tmp;
+	}
+	
 	public void examineURL (String startURL, int depth) {
+		if (isFindingHitler && startURL.contains("Adolf_Hitler")) { System.out.println("We found Hitler in " + depth + " jumps!"); return; }
+		
 		// Log the link to terminal
 		for (int i = 0; i < depth; i++) System.out.print ("\t");
 		System.out.println (startURL);
 		// Log the link to file
 		for (int i = 0; i < depth; i++) pw.print ("\t");
 		pw.println(startURL);
-		linksToSee.remove(startURL);
+		//linksToSee.remove(startURL);
 		String content = wg.getContent(startURL);
+		ArrayList<String> linksToSee = new ArrayList<String> ();
 		
 		if (content == null) return;
 		// Remove header
@@ -75,7 +102,7 @@ public class Ionic {
 				nextIndex += 2;
 				
 				String newLink = content.substring(nextIndex, content.indexOf("\"", nextIndex));
-				if (!newLink.equals("mw-selflink selflink") && !newLink.contains("mediawiki")) addLinkToSee ("https://en.wikipedia.org" + newLink);
+				if (!newLink.equals("mw-selflink selflink") && !newLink.contains("mediawiki")) addLinkToSee (newLink, linksToSee, depth);
 				nextIndex += 5;
 			}
 		}
@@ -106,12 +133,12 @@ public class Ionic {
 			}
 			String linkText = linkFullText.substring (ltStart+1, linkFullText.length()-4);
 			
-			if (suffix.contains("action=edit")) {
+			if (suffix.contains("/w/index.php?")) {
 				content = content.replace(linkFullText, "");
-			} else if (suffix.contains("#cite_note-") || suffix.contains("#cite_ref") || suffix.contains("https://") || suffix.contains("File:")) {
+			} else if (suffix.contains("#cite_note-") || suffix.contains("#cite_ref") || suffix.contains("https://") || suffix.contains(":") || suffix.contains("wikimedia")) {
 				content = content.replace(linkFullText, "");
 			} else {
-				addLinkToSee ("https://en.wikipedia.org" + suffix);
+				addLinkToSee (suffix, linksToSee, depth);
 				content = content.replace(linkFullText, linkText);
 			}
 			
@@ -128,36 +155,13 @@ public class Ionic {
 		currentArticle.link = startURL;
 		WikipediaHeading currentHeading = new WikipediaHeading ("Summary");
 		
-//		while (searchIndex <= endOfContent && searchIndex != -1) { // TODO: Jump to next TAG, single nested loop
-//			while ((searchIndex = content.indexOf("<p>", searchIndex)) != -1 && searchIndex <= endOfContent) {
-//				String tmpStr = "";
-//				// TODO: Extract rendered text and links
-//			}
-//			currentArticle.headings.add(currentHeading);
-//			currentHeading = new WikipediaHeading ("<Next heading>"); // TODO: Find heading name
-//		}
-		
-		
-//		System.out.println(content);
-//		for (String s : linksToSee) {
-////			if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-////			    try {
-////					Desktop.getDesktop().browse(new URI(s));
-////				} catch (IOException e) {
-////					e.printStackTrace();
-////				} catch (URISyntaxException e) {
-////					e.printStackTrace();
-////				}
-////			}
-//			System.out.println(s);
-//		}
 //		
 //		usingBufferedWriter (content, "page.html");
+		if (isFindingHitler) return;
 		String[] s = startURL.split("/");
-		usingBufferedWriter (content, "ViewedPages/" + s[s.length-1] + ".html");
+		//usingBufferedWriter (content, "ViewedPages/" + s[s.length-1] + ".html");
 		if (depth >= iterationDepth) return;
-		String[] tmp = linksToSee.toArray(new String[]{});
-		for (String link : tmp) {
+		for (String link : linksToSee) {
 			examineURL (link, depth + 1);
 		}
 	}
