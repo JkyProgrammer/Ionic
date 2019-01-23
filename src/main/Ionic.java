@@ -14,8 +14,9 @@ public class Ionic {
 
 	public static void main(String[] args) {
 		Ionic i = new Ionic ();
-		i.examineURL ("https://en.wikipedia.org/wiki/Logic_bomb");
-		i.examineURL("https://en.wikipedia.org/wiki/Gordon_Cowans");
+		//i.examineURL ("https://en.wikipedia.org/wiki/Logic_bomb");
+		//i.examineURL("https://en.wikipedia.org/wiki/Gordon_Cowans");
+      i.examineURL ("https://en.m.wikipedia.org/wiki/Ion");
 	}
 	
 	WikipediaGetter wg = new WikipediaGetter ();
