@@ -2,8 +2,11 @@ package main;
 
 import java.awt.Desktop;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
 import wikipedia.*;
@@ -16,21 +19,50 @@ public class Ionic {
 		Ionic i = new Ionic ();
 		//i.examineURL ("https://en.wikipedia.org/wiki/Logic_bomb");
 		//i.examineURL("https://en.wikipedia.org/wiki/Gordon_Cowans");
-      i.examineURL ("https://en.m.wikipedia.org/wiki/Ion");
+      i.examineURL ("https://en.m.wikipedia.org/wiki/Ion", 0);
 	}
 	
+	public Ionic () {
+		try {
+		pw = new PrintWriter (new File("Links.txt"));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+	}
+	
+	PrintWriter pw;
 	WikipediaGetter wg = new WikipediaGetter ();
 	ArrayList<WikipediaArticle> articles = new ArrayList<WikipediaArticle> ();
 	
-	public void examineURL (String startURL) {
-		String content = wg.getContent(startURL);
-		ArrayList<String> linksToSee = new ArrayList<String> ();
+	static int iterationDepth = 2;
+	ArrayList<String> linksToSee = new ArrayList<String> ();
+	ArrayList<String> allLinks = new ArrayList<String> ();
 	
+	public void addLinkToSee (String link) {
+		if (!allLinks.contains(link)) {
+			allLinks.add(link);
+			linksToSee.add(link);
+		}
+	}
+	
+	public void examineURL (String startURL, int depth) {
+		// Log the link to terminal
+		for (int i = 0; i < depth; i++) System.out.print ("\t");
+		System.out.println (startURL);
+		// Log the link to file
+		for (int i = 0; i < depth; i++) pw.print ("\t");
+		pw.println(startURL);
+		linksToSee.remove(startURL);
+		String content = wg.getContent(startURL);
+		
+		if (content == null) return;
 		// Remove header
 		content = content.substring(content.indexOf("</head>") + 8);
 		
 		// Remove references and footer
-		content = content.substring(0, content.indexOf("<h2><span class=\"mw-headline\" id=\"References\">References</span>"));
+		int refs = content.indexOf("<h2><span class=\"mw-headline\" id=\"References\">References</span>");
+		if (refs > -1) content = content.substring(0, refs);
 		
 		// Remove series table if present
 		int indexOfTable = content.indexOf("<table class=\"vertical-navbox nowraplinks\"");
@@ -43,7 +75,8 @@ public class Ionic {
 				nextIndex += 2;
 				
 				String newLink = content.substring(nextIndex, content.indexOf("\"", nextIndex));
-				if (!newLink.equals("mw-selflink selflink")) linksToSee.add("https://en.wikipedia.org" + newLink);
+				if (!newLink.equals("mw-selflink selflink") && !newLink.contains("mediawiki")) addLinkToSee ("https://en.wikipedia.org" + newLink);
+				nextIndex += 5;
 			}
 		}
 		content = content.substring(endIndex + 8);
@@ -52,8 +85,10 @@ public class Ionic {
 		int indexOfContents = content.indexOf ("<div id=\"toc\" class=\"toc\">");
 		int indexOfContentsEnd = content.indexOf("</div>", indexOfContents);
 		indexOfContentsEnd = content.indexOf("</div>", indexOfContentsEnd + 6);
-		String tmp = content.substring(0, indexOfContents);
-		content = tmp + content.substring(indexOfContentsEnd + 6);
+		if (indexOfContents != -1) {
+			String tmp = content.substring(0, indexOfContents);
+			content = tmp + content.substring(indexOfContentsEnd + 6);
+		}
 		
 		// Remove other unwanted tags
 		content = content.replaceAll("<b>", "");
@@ -65,7 +100,7 @@ public class Ionic {
 		while (searchIndex <= endOfContent && searchIndex != -1) {
 			String suffix = content.substring(searchIndex + 9, content.indexOf ("\"", searchIndex + 9));
 			String linkFullText = content.substring(searchIndex, content.indexOf ("</a>", searchIndex)+4);
-			int ltStart = linkFullText.length()-6;
+			int ltStart = linkFullText.length()-5;
 			while (linkFullText.charAt(ltStart) != '>') {
 				ltStart--;
 			}
@@ -73,10 +108,10 @@ public class Ionic {
 			
 			if (suffix.contains("action=edit")) {
 				content = content.replace(linkFullText, "");
-			} else if (suffix.contains("#cite_note-")) {
+			} else if (suffix.contains("#cite_note-") || suffix.contains("#cite_ref") || suffix.contains("https://") || suffix.contains("File:")) {
 				content = content.replace(linkFullText, "");
 			} else {
-				linksToSee.add("https://en.wikipedia.org" + suffix);
+				addLinkToSee ("https://en.wikipedia.org" + suffix);
 				content = content.replace(linkFullText, linkText);
 			}
 			
@@ -103,21 +138,28 @@ public class Ionic {
 //		}
 		
 		
-		System.out.println(content);
-		for (String s : linksToSee) {
-//			if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-//			    try {
-//					Desktop.getDesktop().browse(new URI(s));
-//				} catch (IOException e) {
-//					e.printStackTrace();
-//				} catch (URISyntaxException e) {
-//					e.printStackTrace();
-//				}
-//			}
-			System.out.println(s);
+//		System.out.println(content);
+//		for (String s : linksToSee) {
+////			if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+////			    try {
+////					Desktop.getDesktop().browse(new URI(s));
+////				} catch (IOException e) {
+////					e.printStackTrace();
+////				} catch (URISyntaxException e) {
+////					e.printStackTrace();
+////				}
+////			}
+//			System.out.println(s);
+//		}
+//		
+//		usingBufferedWriter (content, "page.html");
+		String[] s = startURL.split("/");
+		usingBufferedWriter (content, "ViewedPages/" + s[s.length-1] + ".html");
+		if (depth >= iterationDepth) return;
+		String[] tmp = linksToSee.toArray(new String[]{});
+		for (String link : tmp) {
+			examineURL (link, depth + 1);
 		}
-		
-		usingBufferedWriter (content, "page.html");
 	}
 	
 	public static void usingBufferedWriter(String s, String path) {
