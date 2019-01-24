@@ -14,16 +14,22 @@ import java.util.Random;
 import wikipedia.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Duration;
+import java.time.Instant;
 
 public class Ionic {
 
 	public static void main(String[] args) {
 		Ionic i = new Ionic ();
-		i.em = ExplorationMode.onerandom;
-		i.iterationDepth = 100;
-		i.examineURL ("https://en.wikipedia.org/wiki/Logic_bomb", 0);
+//		i.em = ExplorationMode.onerandom;
+//		i.iterationDepth = 100;
+//		i.examineURL ("https://en.wikipedia.org/wiki/Logic_bomb", 0);
 		//i.examineURL("https://en.wikipedia.org/wiki/Gordon_Cowans");
 		//i.findHitler("https://en.m.wikipedia.org/wiki/Ion");
+		//i.lateralSearch("https://en.wikipedia.org/wiki/Logic_bomb");
+		i.em = ExplorationMode.singleexamine;
+		i.examineURL("https://en.m.wikipedia.org/wiki/Japan", 0);
+		//i.lateralSearch("https://en.wikipedia.org/wiki/Incumbent");
 	}
 	
 	public Ionic () {
@@ -47,6 +53,40 @@ public class Ionic {
 	
 	ArrayList<String> hitlerLinks = new ArrayList<String> (Arrays.asList("Adolf_Hitler", "World_War_II", "Germany", "German"));
 	
+	public void lateralSearch (String startingPoint) {
+		em = ExplorationMode.lateralsearch;
+		WikipediaArticle wa = examineURL (startingPoint, 0);
+		ArrayList<WikipediaArticle> thisLayerLinks = new ArrayList<WikipediaArticle> ();
+		thisLayerLinks.add(wa);
+		
+		int i = 0;
+		while (i < 6) {
+			ArrayList<WikipediaArticle> nextLayerLinks = new ArrayList<WikipediaArticle> ();
+			for (WikipediaArticle w : thisLayerLinks) {
+				if (w.containedLinks.contains("https://en.wikipedia.org/wiki/Adolf_Hitler")) {
+					System.out.println("Found Hitler after " + (i+1) + " jumps.");
+					return;
+				} else {
+					for (String l : w.containedLinks) {
+						WikipediaArticle n = examineURL (l, i+1);
+						if (n != null) {
+							if (n.containedLinks.contains("https://en.wikipedia.org/wiki/Adolf_Hitler")) {
+								System.out.println("Found Hitler after " + (i+2) + " jumps.");
+								return;
+							}
+							nextLayerLinks.add(n);
+						} else {
+							System.out.println("Got null article.");
+						}
+					}
+				}
+			}
+			thisLayerLinks = nextLayerLinks;
+			i++;
+		}
+	}
+	
+	
 	public void addLinkToSee (String link, ArrayList<String> arr, int depth) {
 		String realLink = "https://en.wikipedia.org" + link;
 		if (isFindingHitler) {
@@ -62,6 +102,8 @@ public class Ionic {
 		} else if (!allLinks.contains(realLink)) {
 			allLinks.add(realLink);
 			arr.add(realLink);
+		} else if (em == ExplorationMode.lateralsearch && !arr.contains(realLink)) {
+			arr.add(realLink);
 		}
 	}
 	
@@ -74,21 +116,32 @@ public class Ionic {
 		iterationDepth = tmp;
 	}
 	
+	public void outputLength () {
+		Instant end = Instant.now();
+		System.out.println(Duration.between(start, end));
+		start = end;
+	}
 	
-	public void examineURL (String startURL, int depth) {
-		if (isFindingHitler && startURL.contains("Adolf_Hitler")) { System.out.println("We found Hitler in " + depth + " jumps!"); return; }
-		
+	Instant start;
+	
+	public WikipediaArticle examineURL (String startURL, int depth) {
+		start = Instant.now();
 		// Log the link to terminal
 		for (int i = 0; i < depth; i++) System.out.print (" ");
 		System.out.println (startURL);
+		
+		outputLength ();
+		
 		// Log the link to file
 		for (int i = 0; i < depth; i++) pw.print (" ");
 		pw.println(startURL);
 		//linksToSee.remove(startURL);
 		String content = wg.getContent(startURL);
+		if (content == null) return null;
 		ArrayList<String> linksToSee = new ArrayList<String> ();
 		
-		if (content == null) return;
+		outputLength ();
+		
 		// Remove header
 		content = content.substring(content.indexOf("</head>") + 8);
 		
@@ -96,13 +149,15 @@ public class Ionic {
 		int refs = content.indexOf("<h2><span class=\"mw-headline\" id=\"References\">References</span>");
 		if (refs > -1) content = content.substring(0, refs);
 		
+		outputLength ();
+		
 		// Remove series table if present
 		int indexOfTable = content.indexOf("<table class=\"vertical-navbox nowraplinks\"");
 		int endIndex = content.indexOf("</table>", indexOfTable);
 		if (indexOfTable != -1) {
 			// Read links into linksToSee
 			int nextIndex = 0;
-			while ((nextIndex = content.indexOf("<li>", nextIndex + 4)) < endIndex) {
+			while ((nextIndex = content.indexOf("<li>", nextIndex + 4)) < endIndex && nextIndex > indexOfTable) {
 				nextIndex = content.indexOf("=", nextIndex);
 				nextIndex += 2;
 				
@@ -113,6 +168,8 @@ public class Ionic {
 			content = content.substring(endIndex + 8);
 		}
 		
+		outputLength ();
+		
 		// Cut out contents table
 		int indexOfContents = content.indexOf ("<div id=\"toc\" class=\"toc\">");
 		int indexOfContentsEnd = content.indexOf("</div>", indexOfContents);
@@ -122,9 +179,13 @@ public class Ionic {
 			content = tmp + content.substring(indexOfContentsEnd + 6);
 		}
 		
+		outputLength ();
+		
 		// Remove other unwanted tags
 		content = content.replaceAll("<b>", "");
 		content = content.replaceAll("</b>", "");
+		
+		outputLength ();
 		
 		// Search for and replace links in the content
 		int endOfContent = content.length()-1;
@@ -151,33 +212,38 @@ public class Ionic {
 			endOfContent = content.length()-1;
 		}
 		
+		outputLength ();
+		
 		// Analyse the text content
 		endOfContent = content.length()-1;
 		searchIndex = 0;
 		
 		WikipediaArticle currentArticle = new WikipediaArticle ();
-		currentArticle.title = startURL.substring(startURL.lastIndexOf("/")+1);
-		currentArticle.link = startURL;
-		WikipediaHeading currentHeading = new WikipediaHeading ("Summary");
+		currentArticle.containedLinks = linksToSee;
 		
 //		
 //		usingBufferedWriter (content, "page.html");
-		if (isFindingHitler) return;
-		String[] s = startURL.split("/");
+		if (isFindingHitler) return currentArticle;
+		//String[] s = startURL.split("/");
 		//usingBufferedWriter (content, "ViewedPages/" + s[s.length-1] + ".html");
-		if (depth >= iterationDepth) return;
+		if (depth >= iterationDepth) return currentArticle;
 		if (em == ExplorationMode.all) {
 			for (String link : linksToSee) {
 				examineURL (link, depth + 1);
 			}
+		} else if (em == ExplorationMode.singleexamine) {
+			return currentArticle;
 		} else if (em == ExplorationMode.onerandom) {
 			if (linksToSee.isEmpty ()) {
 				System.out.println("Ah! Dead end!");
-				return;
+				return null;
 			}
 			int r = randomer.nextInt(linksToSee.size());
 			examineURL (linksToSee.get(r), depth + 1);
+		} else if (em == ExplorationMode.lateralsearch) {
+			return currentArticle;
 		}
+		return null;
 	}
 	
 	public static void usingBufferedWriter(String s, String path) {

@@ -4,5 +4,7 @@ public enum ExplorationMode {
 	onerandom,
 	all,
 	tworandom,
-	threerandom
+	threerandom,
+	lateralsearch,
+	singleexamine
 }
