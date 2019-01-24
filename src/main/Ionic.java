@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Random;
 
 import wikipedia.*;
 import java.net.URI;
@@ -18,6 +19,8 @@ public class Ionic {
 
 	public static void main(String[] args) {
 		Ionic i = new Ionic ();
+		i.em = ExplorationMode.onerandom;
+		i.iterationDepth = 100;
 		i.examineURL ("https://en.wikipedia.org/wiki/Logic_bomb", 0);
 		//i.examineURL("https://en.wikipedia.org/wiki/Gordon_Cowans");
 		//i.findHitler("https://en.m.wikipedia.org/wiki/Ion");
@@ -36,7 +39,8 @@ public class Ionic {
 	PrintWriter pw;
 	WikipediaGetter wg = new WikipediaGetter ();
 	ArrayList<WikipediaArticle> articles = new ArrayList<WikipediaArticle> ();
-	
+	Random randomer = new Random ();
+	ExplorationMode em = ExplorationMode.all;
 	int iterationDepth = 2;
 	boolean isFindingHitler = false;
 	ArrayList<String> allLinks = new ArrayList<String> ();
@@ -70,14 +74,15 @@ public class Ionic {
 		iterationDepth = tmp;
 	}
 	
+	
 	public void examineURL (String startURL, int depth) {
 		if (isFindingHitler && startURL.contains("Adolf_Hitler")) { System.out.println("We found Hitler in " + depth + " jumps!"); return; }
 		
 		// Log the link to terminal
-		for (int i = 0; i < depth; i++) System.out.print ("\t");
+		for (int i = 0; i < depth; i++) System.out.print (" ");
 		System.out.println (startURL);
 		// Log the link to file
-		for (int i = 0; i < depth; i++) pw.print ("\t");
+		for (int i = 0; i < depth; i++) pw.print (" ");
 		pw.println(startURL);
 		//linksToSee.remove(startURL);
 		String content = wg.getContent(startURL);
@@ -105,8 +110,8 @@ public class Ionic {
 				if (!newLink.equals("mw-selflink selflink") && !newLink.contains("mediawiki")) addLinkToSee (newLink, linksToSee, depth);
 				nextIndex += 5;
 			}
+			content = content.substring(endIndex + 8);
 		}
-		content = content.substring(endIndex + 8);
 		
 		// Cut out contents table
 		int indexOfContents = content.indexOf ("<div id=\"toc\" class=\"toc\">");
@@ -135,7 +140,7 @@ public class Ionic {
 			
 			if (suffix.contains("/w/index.php?")) {
 				content = content.replace(linkFullText, "");
-			} else if (suffix.contains("#cite_note-") || suffix.contains("#cite_ref") || suffix.contains("https://") || suffix.contains(":") || suffix.contains("wikimedia")) {
+			} else if (suffix.contains("#cite_note-") || suffix.contains("#cite_ref") || suffix.contains("https://") || suffix.contains(":") || suffix.contains("wikimedia") || suffix.contains("external text")) {
 				content = content.replace(linkFullText, "");
 			} else {
 				addLinkToSee (suffix, linksToSee, depth);
@@ -161,8 +166,17 @@ public class Ionic {
 		String[] s = startURL.split("/");
 		//usingBufferedWriter (content, "ViewedPages/" + s[s.length-1] + ".html");
 		if (depth >= iterationDepth) return;
-		for (String link : linksToSee) {
-			examineURL (link, depth + 1);
+		if (em == ExplorationMode.all) {
+			for (String link : linksToSee) {
+				examineURL (link, depth + 1);
+			}
+		} else if (em == ExplorationMode.onerandom) {
+			if (linksToSee.isEmpty ()) {
+				System.out.println("Ah! Dead end!");
+				return;
+			}
+			int r = randomer.nextInt(linksToSee.size());
+			examineURL (linksToSee.get(r), depth + 1);
 		}
 	}
 	
