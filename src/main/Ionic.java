@@ -28,7 +28,16 @@ public class Ionic {
 		//i.findHitler("https://en.m.wikipedia.org/wiki/Ion");
 		//i.lateralSearch("https://en.wikipedia.org/wiki/Logic_bomb");
 		i.em = ExplorationMode.singleexamine;
-		i.examineURL("https://en.m.wikipedia.org/wiki/Japan", 0);
+		for (int ii = 0; ii < 8; ii++) {
+			i.examineURL("https://en.m.wikipedia.org/wiki/Japan", 0);
+		}
+		//i.examineURL("https://en.m.wikipedia.org/wiki/Incumbent", 0);
+		//i.examineURL("https://en.m.wikipedia.org/wiki/Ion", 0);
+		//i.examineURL("https://en.m.wikipedia.org/wiki/Logic_bomb", 0);
+		//i.examineURL("https://en.m.wikipedia.org/wiki/Gordon_Cowans", 0);
+		//i.examineURL("https://en.m.wikipedia.org/wiki/Battle_of_Liberty", 0);
+		//i.examineURL("https://en.m.wikipedia.org/wiki/Boer_War_Memorial_(Montreal)", 0);
+		//i.examineURL("https://en.m.wikipedia.org/wiki/Buddhism", 0);
 		//i.lateralSearch("https://en.wikipedia.org/wiki/Incumbent");
 	}
 	
@@ -49,6 +58,7 @@ public class Ionic {
 	ExplorationMode em = ExplorationMode.all;
 	int iterationDepth = 2;
 	boolean isFindingHitler = false;
+	boolean botherRemovingLinks = false;
 	ArrayList<String> allLinks = new ArrayList<String> ();
 	
 	ArrayList<String> hitlerLinks = new ArrayList<String> (Arrays.asList("Adolf_Hitler", "World_War_II", "Germany", "German"));
@@ -89,21 +99,13 @@ public class Ionic {
 	
 	public void addLinkToSee (String link, ArrayList<String> arr, int depth) {
 		String realLink = "https://en.wikipedia.org" + link;
-		if (isFindingHitler) {
-			if (hitlerLinks.contains(link)) {
-				allLinks.add(realLink);
-				if (depth < iterationDepth) examineURL (realLink, depth+1);
-				//linksToSee.add(realLink);
-			} else if (depth < 2) { // Allows a one article depth expansion, to reduce dead-ends
-				allLinks.add(realLink);
-				if (depth < iterationDepth) examineURL (realLink, depth+1);
-				//linksToSee.add(realLink);
-			}
-		} else if (!allLinks.contains(realLink)) {
+		if (!allLinks.contains(realLink)) {
 			allLinks.add(realLink);
 			arr.add(realLink);
+			System.out.println ("[Discovered] " + realLink);
 		} else if (em == ExplorationMode.lateralsearch && !arr.contains(realLink)) {
 			arr.add(realLink);
+			System.out.println ("[Discovered] " + realLink);
 		}
 	}
 	
@@ -128,19 +130,16 @@ public class Ionic {
 		start = Instant.now();
 		// Log the link to terminal
 		for (int i = 0; i < depth; i++) System.out.print (" ");
-		System.out.println (startURL);
+		System.out.println ("[Examining] " + startURL);
 		
-		outputLength ();
 		
 		// Log the link to file
 		for (int i = 0; i < depth; i++) pw.print (" ");
-		pw.println(startURL);
-		//linksToSee.remove(startURL);
+		pw.println("[Examining] " + startURL);
 		String content = wg.getContent(startURL);
 		if (content == null) return null;
 		ArrayList<String> linksToSee = new ArrayList<String> ();
 		
-		outputLength ();
 		
 		// Remove header
 		content = content.substring(content.indexOf("</head>") + 8);
@@ -149,7 +148,6 @@ public class Ionic {
 		int refs = content.indexOf("<h2><span class=\"mw-headline\" id=\"References\">References</span>");
 		if (refs > -1) content = content.substring(0, refs);
 		
-		outputLength ();
 		
 		// Remove series table if present
 		int indexOfTable = content.indexOf("<table class=\"vertical-navbox nowraplinks\"");
@@ -168,7 +166,6 @@ public class Ionic {
 			content = content.substring(endIndex + 8);
 		}
 		
-		outputLength ();
 		
 		// Cut out contents table
 		int indexOfContents = content.indexOf ("<div id=\"toc\" class=\"toc\">");
@@ -179,13 +176,12 @@ public class Ionic {
 			content = tmp + content.substring(indexOfContentsEnd + 6);
 		}
 		
-		outputLength ();
 		
 		// Remove other unwanted tags
 		content = content.replaceAll("<b>", "");
 		content = content.replaceAll("</b>", "");
 		
-		outputLength ();
+		outputLength();
 		
 		// Search for and replace links in the content
 		int endOfContent = content.length()-1;
@@ -200,19 +196,19 @@ public class Ionic {
 			String linkText = linkFullText.substring (ltStart+1, linkFullText.length()-4);
 			
 			if (suffix.contains("/w/index.php?")) {
-				content = content.replace(linkFullText, "");
+				if (botherRemovingLinks) content = content.replace(linkFullText, "");
 			} else if (suffix.contains("#cite_note-") || suffix.contains("#cite_ref") || suffix.contains("https://") || suffix.contains(":") || suffix.contains("wikimedia") || suffix.contains("external text")) {
-				content = content.replace(linkFullText, "");
+				if (botherRemovingLinks) content = content.replace(linkFullText, "");
 			} else {
 				addLinkToSee (suffix, linksToSee, depth);
-				content = content.replace(linkFullText, linkText);
+				if (botherRemovingLinks) content = content.replace(linkFullText, linkText);
 			}
 			
+			searchIndex += 5;
 			searchIndex = content.indexOf("<a href=", searchIndex);
 			endOfContent = content.length()-1;
 		}
 		
-		outputLength ();
 		
 		// Analyse the text content
 		endOfContent = content.length()-1;
@@ -220,10 +216,8 @@ public class Ionic {
 		
 		WikipediaArticle currentArticle = new WikipediaArticle ();
 		currentArticle.containedLinks = linksToSee;
-		
-//		
-//		usingBufferedWriter (content, "page.html");
-		if (isFindingHitler) return currentArticle;
+		outputLength();
+		System.out.println (linksToSee.size());
 		//String[] s = startURL.split("/");
 		//usingBufferedWriter (content, "ViewedPages/" + s[s.length-1] + ".html");
 		if (depth >= iterationDepth) return currentArticle;
