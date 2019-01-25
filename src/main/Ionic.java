@@ -27,10 +27,10 @@ public class Ionic {
 		//i.examineURL("https://en.wikipedia.org/wiki/Gordon_Cowans");
 		//i.findHitler("https://en.m.wikipedia.org/wiki/Ion");
 		//i.lateralSearch("https://en.wikipedia.org/wiki/Logic_bomb");
-		i.em = ExplorationMode.singleexamine;
-		for (int ii = 0; ii < 8; ii++) {
-			i.examineURL("https://en.m.wikipedia.org/wiki/Japan", 0);
-		}
+		//i.em = ExplorationMode.singleexamine;
+		//for (int ii = 0; ii < 8; ii++) {
+		//	i.examineURL("https://en.m.wikipedia.org/wiki/Japan", 0);
+		//}
 		//i.examineURL("https://en.m.wikipedia.org/wiki/Incumbent", 0);
 		//i.examineURL("https://en.m.wikipedia.org/wiki/Ion", 0);
 		//i.examineURL("https://en.m.wikipedia.org/wiki/Logic_bomb", 0);
@@ -38,7 +38,7 @@ public class Ionic {
 		//i.examineURL("https://en.m.wikipedia.org/wiki/Battle_of_Liberty", 0);
 		//i.examineURL("https://en.m.wikipedia.org/wiki/Boer_War_Memorial_(Montreal)", 0);
 		//i.examineURL("https://en.m.wikipedia.org/wiki/Buddhism", 0);
-		//i.lateralSearch("https://en.wikipedia.org/wiki/Incumbent");
+		i.lateralSearch("https://en.wikipedia.org/wiki/Incumbent");
 	}
 	
 	public Ionic () {
@@ -102,10 +102,10 @@ public class Ionic {
 		if (!allLinks.contains(realLink)) {
 			allLinks.add(realLink);
 			arr.add(realLink);
-			System.out.println ("[Discovered] " + realLink);
+			//System.out.println ("[Discovered] " + realLink);
 		} else if (em == ExplorationMode.lateralsearch && !arr.contains(realLink)) {
 			arr.add(realLink);
-			System.out.println ("[Discovered] " + realLink);
+			//System.out.println ("[Discovered] " + realLink);
 		}
 	}
 	
