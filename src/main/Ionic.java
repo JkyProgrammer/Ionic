@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+
 import wikipedia.*;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -38,7 +41,12 @@ public class Ionic {
 		//i.examineURL("https://en.m.wikipedia.org/wiki/Battle_of_Liberty", 0);
 		//i.examineURL("https://en.m.wikipedia.org/wiki/Boer_War_Memorial_(Montreal)", 0);
 		//i.examineURL("https://en.m.wikipedia.org/wiki/Buddhism", 0);
-		i.lateralSearch("https://en.wikipedia.org/wiki/Incumbent");
+		//i.lateralSearch("https://en.wikipedia.org/wiki/Incumbent");
+		String res = JOptionPane.showInputDialog("Enter a wiki suffix: ");
+		System.out.println (res);
+		if (res != null && !res.equals("")) {
+			i.lateralSearch("https://en.wikipedia.org/wiki/" + res);
+		}
 	}
 	
 	public Ionic () {
@@ -63,9 +71,19 @@ public class Ionic {
 	
 	ArrayList<String> hitlerLinks = new ArrayList<String> (Arrays.asList("Adolf_Hitler", "World_War_II", "Germany", "German"));
 	
+	private void dialog (String text) {
+		JOptionPane.showMessageDialog(null, text);
+	}
+	
 	public void lateralSearch (String startingPoint) {
 		em = ExplorationMode.lateralsearch;
 		WikipediaArticle wa = examineURL (startingPoint, 0);
+		if (wa != null) {
+			dialog ("Click the button below to begin search.");
+		} else {
+			dialog ("Failed to retreive article.");
+			System.exit(1);
+		}
 		ArrayList<WikipediaArticle> thisLayerLinks = new ArrayList<WikipediaArticle> ();
 		thisLayerLinks.add(wa);
 		
@@ -75,6 +93,7 @@ public class Ionic {
 			for (WikipediaArticle w : thisLayerLinks) {
 				if (w.containedLinks.contains("https://en.wikipedia.org/wiki/Adolf_Hitler")) {
 					System.out.println("Found Hitler after " + (i+1) + " jumps.");
+					dialog ("Found Hitler after " + (i+1) + " jumps.");
 					return;
 				} else {
 					for (String l : w.containedLinks) {
@@ -82,6 +101,7 @@ public class Ionic {
 						if (n != null) {
 							if (n.containedLinks.contains("https://en.wikipedia.org/wiki/Adolf_Hitler")) {
 								System.out.println("Found Hitler after " + (i+2) + " jumps.");
+								dialog ("Found Hitler after " + (i+2) + " jumps.");
 								return;
 							}
 							nextLayerLinks.add(n);
