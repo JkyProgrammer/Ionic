@@ -75,6 +75,19 @@ public class Ionic {
 		JOptionPane.showMessageDialog(null, text);
 	}
 	
+	private void foundHitler (int jumps, WikipediaArticle end) {
+		String jumpPath = end.title;
+		WikipediaArticle e = end.parent;
+		while (e != null) {
+			jumpPath = e.title + " > ";
+			e = e.parent;
+		}
+		
+		
+		System.out.println("Found Hitler after " + jumps + " jumps. Path was: " + jumpPath);
+		dialog ("Found Hitler after " + jumps + " jumps. Path was: " + jumpPath);
+	}
+	
 	public void lateralSearch (String startingPoint) {
 		em = ExplorationMode.lateralsearch;
 		WikipediaArticle wa = examineURL (startingPoint, 0);
@@ -92,16 +105,21 @@ public class Ionic {
 			ArrayList<WikipediaArticle> nextLayerLinks = new ArrayList<WikipediaArticle> ();
 			for (WikipediaArticle w : thisLayerLinks) {
 				if (w.containedLinks.contains("https://en.wikipedia.org/wiki/Adolf_Hitler")) {
-					System.out.println("Found Hitler after " + (i+1) + " jumps.");
-					dialog ("Found Hitler after " + (i+1) + " jumps.");
+					WikipediaArticle tmp = new WikipediaArticle ();
+					tmp.title = "Adolf Hitler";
+					tmp.parent = w;
+					foundHitler (i+1, tmp);
 					return;
 				} else {
 					for (String l : w.containedLinks) {
 						WikipediaArticle n = examineURL (l, i+1);
 						if (n != null) {
+							n.parent = w;
 							if (n.containedLinks.contains("https://en.wikipedia.org/wiki/Adolf_Hitler")) {
-								System.out.println("Found Hitler after " + (i+2) + " jumps.");
-								dialog ("Found Hitler after " + (i+2) + " jumps.");
+								WikipediaArticle tmp = new WikipediaArticle ();
+								tmp.title = "Adolf Hitler";
+								tmp.parent = n;
+								foundHitler (i+2, tmp);
 								return;
 							}
 							nextLayerLinks.add(n);
@@ -114,6 +132,7 @@ public class Ionic {
 			thisLayerLinks = nextLayerLinks;
 			i++;
 		}
+		dialog ("Oh no! Hitler not found within six jumps!");
 	}
 	
 	
@@ -236,6 +255,7 @@ public class Ionic {
 		
 		WikipediaArticle currentArticle = new WikipediaArticle ();
 		currentArticle.containedLinks = linksToSee;
+		currentArticle.title = startURL.substring(startURL.lastIndexOf("/")+1).replaceAll("_", " ");
 		outputLength();
 		System.out.println (linksToSee.size());
 		//String[] s = startURL.split("/");
