@@ -42,10 +42,12 @@ public class Ionic {
 		//i.examineURL("https://en.m.wikipedia.org/wiki/Boer_War_Memorial_(Montreal)", 0);
 		//i.examineURL("https://en.m.wikipedia.org/wiki/Buddhism", 0);
 		//i.lateralSearch("https://en.wikipedia.org/wiki/Incumbent");
-		String res = JOptionPane.showInputDialog("Enter a wiki suffix: ");
-		System.out.println (res);
-		if (res != null && !res.equals("")) {
-			i.lateralSearch("https://en.wikipedia.org/wiki/" + res);
+		while (true) {
+			String res = JOptionPane.showInputDialog("Enter a wiki suffix: ");
+			System.out.println (res);
+			if (res != null && !res.equals("")) {
+				i.lateralSearch("https://en.wikipedia.org/wiki/" + res);
+			}
 		}
 	}
 	
@@ -79,7 +81,7 @@ public class Ionic {
 		String jumpPath = end.title;
 		WikipediaArticle e = end.parent;
 		while (e != null) {
-			jumpPath = e.title + " > ";
+			jumpPath = e.title + " > " + jumpPath;
 			e = e.parent;
 		}
 		
