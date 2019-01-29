@@ -1,24 +1,21 @@
 package main;
 
-import java.awt.Desktop;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
 import javax.swing.JOptionPane;
-import javax.swing.JTextField;
 
-import wikipedia.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.Duration;
-import java.time.Instant;
+import wikipedia.WikipediaArticle;
+import wikipedia.WikipediaGetter;
 
 public class Ionic {
 
@@ -42,13 +39,14 @@ public class Ionic {
 		//i.examineURL("https://en.m.wikipedia.org/wiki/Boer_War_Memorial_(Montreal)", 0);
 		//i.examineURL("https://en.m.wikipedia.org/wiki/Buddhism", 0);
 		//i.lateralSearch("https://en.wikipedia.org/wiki/Incumbent");
-		while (true) {
-			String res = JOptionPane.showInputDialog("Enter a wiki suffix: ");
+		String res;
+		do {
+			res = JOptionPane.showInputDialog("Enter a wiki suffix: ");
 			System.out.println (res);
 			if (res != null && !res.equals("")) {
 				i.lateralSearch("https://en.wikipedia.org/wiki/" + res);
 			}
-		}
+		} while (res != null);
 	}
 	
 	public Ionic () {
@@ -92,13 +90,14 @@ public class Ionic {
 	
 	public void lateralSearch (String startingPoint) {
 		em = ExplorationMode.lateralsearch;
-		WikipediaArticle wa = examineURL (startingPoint, 0);
-		if (wa != null) {
+		String content = wg.getContent(startingPoint);
+		if (content != null) {
 			dialog ("Click the button below to begin search.");
 		} else {
 			dialog ("Failed to retreive article.");
 			System.exit(1);
 		}
+		WikipediaArticle wa = examineURL (startingPoint, 0);
 		ArrayList<WikipediaArticle> thisLayerLinks = new ArrayList<WikipediaArticle> ();
 		thisLayerLinks.add(wa);
 		
@@ -175,8 +174,8 @@ public class Ionic {
 		
 		
 		// Log the link to file
-		for (int i = 0; i < depth; i++) pw.print (" ");
-		pw.println("[Examining] " + startURL);
+		//for (int i = 0; i < depth; i++) pw.print (" ");
+		//pw.println("[Examining] " + startURL);
 		String content = wg.getContent(startURL);
 		if (content == null) return null;
 		ArrayList<String> linksToSee = new ArrayList<String> ();

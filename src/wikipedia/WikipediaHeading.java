@@ -3,7 +3,7 @@ package wikipedia;
 import java.util.ArrayList;
 
 public class WikipediaHeading {
-	private String title;
+	public String title;
 	private ArrayList<WikipediaDataItem> data;
 
 	public WikipediaHeading (String t) {
