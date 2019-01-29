@@ -9,7 +9,6 @@ import java.io.PrintWriter;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Random;
 
 import javax.swing.JOptionPane;
@@ -41,10 +40,11 @@ public class Ionic {
 		//i.lateralSearch("https://en.wikipedia.org/wiki/Incumbent");
 		String res;
 		do {
-			res = JOptionPane.showInputDialog("Enter a wiki suffix: ");
+			res = JOptionPane.showInputDialog("Enter a wiki suffix as the origin: ");
 			System.out.println (res);
 			if (res != null && !res.equals("")) {
-				i.lateralSearch("https://en.wikipedia.org/wiki/" + res);
+				String target = JOptionPane.showInputDialog("Enter a wiki suffix as the target: ");
+				if (target != null && target != "") i.lateralSearch("https://en.wikipedia.org/wiki/" + res, target);
 			}
 		} while (res != null);
 	}
@@ -68,9 +68,7 @@ public class Ionic {
 	boolean isFindingHitler = false;
 	boolean botherRemovingLinks = false;
 	ArrayList<String> allLinks = new ArrayList<String> ();
-	
-	ArrayList<String> hitlerLinks = new ArrayList<String> (Arrays.asList("Adolf_Hitler", "World_War_II", "Germany", "German"));
-	
+		
 	private void dialog (String text) {
 		JOptionPane.showMessageDialog(null, text);
 	}
@@ -84,11 +82,14 @@ public class Ionic {
 		}
 		
 		
-		System.out.println("Found Hitler after " + jumps + " jumps. Path was: " + jumpPath);
-		dialog ("Found Hitler after " + jumps + " jumps. Path was: " + jumpPath);
+		System.out.println("Found Target after " + jumps + " jumps. Path was: " + jumpPath);
+		dialog ("Found Target after " + jumps + " jumps. Path was: " + jumpPath);
 	}
 	
-	public void lateralSearch (String startingPoint) {
+	String targetURL = "https://en.wikipedia.org/wiki/Adolf_Hitler";
+	
+	public void lateralSearch (String startingPoint, String endingPoint) {
+		targetURL = "https://en.wikipedia.org/wiki/" + endingPoint;
 		em = ExplorationMode.lateralsearch;
 		String content = wg.getContent(startingPoint);
 		if (content != null) {
@@ -105,9 +106,9 @@ public class Ionic {
 		while (i < 6) {
 			ArrayList<WikipediaArticle> nextLayerLinks = new ArrayList<WikipediaArticle> ();
 			for (WikipediaArticle w : thisLayerLinks) {
-				if (w.containedLinks.contains("https://en.wikipedia.org/wiki/Adolf_Hitler")) {
+				if (w.containedLinks.contains(targetURL)) {
 					WikipediaArticle tmp = new WikipediaArticle ();
-					tmp.title = "Adolf Hitler";
+					tmp.title = targetURL.substring(targetURL.lastIndexOf("/")+1).replaceAll("_", " ");
 					tmp.parent = w;
 					foundHitler (i+1, tmp);
 					return;
@@ -116,9 +117,9 @@ public class Ionic {
 						WikipediaArticle n = examineURL (l, i+1);
 						if (n != null) {
 							n.parent = w;
-							if (n.containedLinks.contains("https://en.wikipedia.org/wiki/Adolf_Hitler")) {
+							if (n.containedLinks.contains(targetURL)) {
 								WikipediaArticle tmp = new WikipediaArticle ();
-								tmp.title = "Adolf Hitler";
+								tmp.title = targetURL.substring(targetURL.lastIndexOf("/")+1).replaceAll("_", " ");;
 								tmp.parent = n;
 								foundHitler (i+2, tmp);
 								return;
@@ -133,7 +134,7 @@ public class Ionic {
 			thisLayerLinks = nextLayerLinks;
 			i++;
 		}
-		dialog ("Oh no! Hitler not found within six jumps!");
+		dialog ("Oh no! Target not found within six jumps!");
 	}
 	
 	
