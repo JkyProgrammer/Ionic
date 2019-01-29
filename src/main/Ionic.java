@@ -238,7 +238,7 @@ public class Ionic {
 			
 			if (suffix.contains("/w/index.php?")) {
 				if (botherRemovingLinks) content = content.replace(linkFullText, "");
-			} else if (suffix.contains("#cite_note-") || suffix.contains("#cite_ref") || suffix.contains("https://") || suffix.contains(":") || suffix.contains("wikimedia") || suffix.contains("external text")) {
+			} else if (suffix.contains("#") || suffix.contains("https://") || suffix.contains(":") || suffix.contains("wikimedia") || suffix.contains("external text")) {
 				if (botherRemovingLinks) content = content.replace(linkFullText, "");
 			} else {
 				addLinkToSee (suffix, linksToSee, depth);
