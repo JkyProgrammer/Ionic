@@ -1,5 +1,9 @@
+import java.applet.Applet;
+import javax.swing.JOptionPane;
+
+
 public class IonicApplet extends Applet {
-   public static void main(String[] args) {
+	public static void main(String[] args) {
 		Ionic i = new Ionic ();
 		String res;
 		do {
