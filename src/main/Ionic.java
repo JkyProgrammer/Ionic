@@ -19,7 +19,7 @@ import wikipedia.WikipediaGetter;
 public class Ionic {
 
 	public static void main(String[] args) {
-		Ionic i = new Ionic ();
+		Ionic i = new Ionic (false);
 //		i.em = ExplorationMode.onerandom;
 //		i.iterationDepth = 100;
 //		i.examineURL ("https://en.wikipedia.org/wiki/Logic_bomb", 0);
@@ -49,16 +49,18 @@ public class Ionic {
 		} while (res != null);
 	}
 	
-	public Ionic () {
+	public Ionic (boolean b) {
 		try {
 			pw = new PrintWriter (new File("Links.txt"));
-			for (File file: (new File("ViewedPages/")).listFiles()) file.delete();
+			//for (File file: (new File("ViewedPages/")).listFiles()) file.delete();
+			isApplet = b;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 	}
 	
+	boolean isApplet;
 	PrintWriter pw;
 	WikipediaGetter wg = new WikipediaGetter ();
 	ArrayList<WikipediaArticle> articles = new ArrayList<WikipediaArticle> ();
@@ -70,7 +72,8 @@ public class Ionic {
 	ArrayList<String> allLinks = new ArrayList<String> ();
 		
 	private void dialog (String text) {
-		JOptionPane.showMessageDialog(null, text);
+		if (!isApplet) JOptionPane.showMessageDialog(null, text);
+		else JOptionPane.showMessageDialog(null, text);
 	}
 	
 	private void foundHitler (int jumps, WikipediaArticle end) {

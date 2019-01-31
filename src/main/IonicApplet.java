@@ -1,10 +1,12 @@
+package main;
+
 import java.applet.Applet;
 import javax.swing.JOptionPane;
 
 
 public class IonicApplet extends Applet {
 	public static void main(String[] args) {
-		Ionic i = new Ionic ();
+		Ionic i = new Ionic (true);
 		String res;
 		do {
 			res = JOptionPane.showInputDialog("Enter a wiki suffix as the origin: ");
